@@ -2426,7 +2426,8 @@ private:
                                         }
                                     );
 
-                                    bool do_reset = it == slot.prompt.checkpoints.rend();
+                                    // empty checkpoints + valid LCP n_past = trust cache, no reset needed
+                                    bool do_reset = it == slot.prompt.checkpoints.rend() && !slot.prompt.checkpoints.empty();
 
                                     if (!do_reset) {
                                         // restore the context checkpoint
