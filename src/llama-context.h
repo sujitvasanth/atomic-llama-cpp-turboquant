@@ -398,6 +398,7 @@ private:
     // worker thread without contending with the target's sched. gf_res_prev_mtp keeps
     // its own graph cache so reuse across MTP steps survives target decode calls.
     ggml_backend_sched_ptr sched_mtp;
+    ggml_backend_ptr backend_mtp_stream; // dedicated stream-1 backend for MTP concurrency
     llm_graph_result_ptr   gf_res_prev_mtp;
 
     struct mtp_request {

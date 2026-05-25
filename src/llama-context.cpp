@@ -1,6 +1,7 @@
 #include "llama-context.h"
 
 #include "ggml.h"
+#include "ggml-cuda.h"
 #include "llama-arch.h"
 #include "llama-impl.h"
 #include "llama-batch.h"
@@ -1193,8 +1194,18 @@ bool llama_context::ensure_sched_mtp() {
     const size_t   max_nodes = this->graph_max_nodes(n_tokens);
 
     gf_res_prev_mtp.reset(new llm_graph_result(max_nodes));
+    backend_mtp_stream.reset(ggml_backend_dev_init(model.devices[0].dev, nullptr));
+    ggml_backend_cuda_set_stream(backend_mtp_stream.get(), 1);
+    std::vector<ggml_backend_t> mtp_ptrs;
+    std::vector<ggml_backend_buffer_type_t> mtp_buft;
+    mtp_ptrs.push_back(backend_mtp_stream.get());
+    mtp_buft.push_back(backend_buft[0]);
+    for (size_t i = 1; i < backend_ptrs.size(); ++i) {
+        mtp_ptrs.push_back(backend_ptrs[i]);
+        mtp_buft.push_back(backend_buft[i]);
+    }
     sched_mtp.reset(ggml_backend_sched_new(
-            backend_ptrs.data(), backend_buft.data(), backend_ptrs.size(),
+            mtp_ptrs.data(), mtp_buft.data(), mtp_ptrs.size(),
             max_nodes, /*pipeline_parallel*/ false, cparams.op_offload));
     if (!sched_mtp) {
         LLAMA_LOG_ERROR("%s: ggml_backend_sched_new failed for sched_mtp\n", __func__);

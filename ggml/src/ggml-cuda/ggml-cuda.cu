@@ -5452,4 +5452,9 @@ ggml_backend_t ggml_backend_cuda_init(int device) {
     return cuda_backend;
 }
 
+void ggml_backend_cuda_set_stream(ggml_backend_t backend, int stream_no) {
+    ggml_backend_cuda_context * ctx = (ggml_backend_cuda_context *) backend->context;
+    ctx->curr_stream_no = stream_no;
+}
+
 GGML_BACKEND_DL_IMPL(ggml_backend_cuda_reg)
