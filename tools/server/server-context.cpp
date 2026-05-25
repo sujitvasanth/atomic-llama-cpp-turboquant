@@ -2429,7 +2429,9 @@ private:
                                     // empty checkpoints + valid LCP n_past = trust cache, no reset needed
                                     bool do_reset = it == slot.prompt.checkpoints.rend() && !slot.prompt.checkpoints.empty();
 
-                                    if (!do_reset && it != slot.prompt.checkpoints.rend()) {
+                                    // skip checkpoint restore if KV shift already positioned cache correctly
+                                    const bool kv_shift_ran = (n_past > (int)(it != slot.prompt.checkpoints.rend() ? it->n_tokens : 0));
+                                    if (!do_reset && it != slot.prompt.checkpoints.rend() && !kv_shift_ran) {
                                         // restore the context checkpoint
                                         const size_t checkpoint_size = it->data.size();
                                         const size_t n = llama_state_seq_set_data_ext(ctx, it->data.data(), checkpoint_size, slot.id, LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY);
